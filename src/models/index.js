@@ -1,4 +1,4 @@
-const { sequelize } = require("../config/config");
+const { sequelize } = require("./config");
 const User = require("./user.model");
 
 const syncDB = async () => {

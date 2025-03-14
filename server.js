@@ -1,20 +1,22 @@
+// src/server.js
 const express = require("express");
-const dotenv = require("dotenv");
-dotenv.config();
 const cors = require("cors");
-const connectDB = require("./db/db");
-const port = process.env.PORT;
-const authRoutes = require("./routes/authRoutes");
+const { connectDB } = require("./src/models/config");
+const authRoutes = require("./src/routes/auth.routes");
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use("/", authRoutes);
+app.use(express.json()); // For parsing JSON data
+app.use(cors()); // To allow cross-origin requests
 
+// Database connection
 connectDB();
 
-app.listen(port, () => {
-  console.log(`Server running on port: ${port}`);
+// Routes setup
+app.use("/api/auth", authRoutes); // Prefix your authentication routes with '/api/auth'
+
+// Server setup
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
