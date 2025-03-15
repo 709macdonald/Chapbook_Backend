@@ -29,10 +29,9 @@ const User = sequelize.define("User", {
   },
 });
 
-// Before creating or updating a user, hash the password
 User.beforeCreate(async (user) => {
-  const salt = await bcrypt.genSalt(10); // Generate a salt for bcrypt
-  user.password = await bcrypt.hash(user.password, salt); // Hash the password
+  const salt = await bcrypt.genSalt(10);
+  user.password = await bcrypt.hash(user.password, salt);
 });
 
 User.beforeUpdate(async (user) => {
@@ -42,10 +41,9 @@ User.beforeUpdate(async (user) => {
   }
 });
 
-// Sync the model with the database
 async function syncUserModel() {
   try {
-    await User.sync(); // This will create the table if it doesn't exist
+    await User.sync();
     console.log("User model has been synced successfully.");
   } catch (error) {
     console.error("Error syncing the user model:", error);
