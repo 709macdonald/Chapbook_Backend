@@ -5,6 +5,11 @@ const createUser = async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
 
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ error: "Email is already in use" });
+    }
+
     const hashedPassword = await hashPassword(password);
 
     const newUser = await User.create({
@@ -28,8 +33,6 @@ const createUser = async (req, res) => {
     return res.status(500).json({ error: "Failed to create user" });
   }
 };
-
-module.exports = { createUser };
 
 const getAllUsers = async (req, res) => {
   try {
