@@ -1,15 +1,17 @@
 const User = require("../models/user");
+const { hashPassword, comparePassword } = require("../utils/auth.utils");
 
 const createUser = async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
 
-    // Create user (the password will be hashed automatically by the model)
+    const hashedPassword = await hashPassword(password);
+
     const newUser = await User.create({
       firstName,
       lastName,
       email,
-      password, // the password will be hashed automatically before saving
+      password: hashedPassword,
     });
 
     return res.status(201).json({
@@ -27,9 +29,7 @@ const createUser = async (req, res) => {
   }
 };
 
-module.exports = {
-  createUser,
-};
+module.exports = { createUser };
 
 const getAllUsers = async (req, res) => {
   try {
