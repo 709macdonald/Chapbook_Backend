@@ -1,6 +1,11 @@
 const User = require("../models/user");
-const { hashPassword, comparePassword } = require("../utils/auth.utils");
+const {
+  hashPassword,
+  comparePassword,
+  generateToken,
+} = require("../utils/auth.utils");
 
+// EDIT USERS TABLE
 const createUser = async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
@@ -115,10 +120,40 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// LOGIN USERS
+const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(400).json({ error: "Invalid email or password" });
+    }
+
+    const isPasswordValid = await comparePassword(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(400).json({ error: "Invalid email or password" });
+    }
+
+    const token = generateToken(user.userId);
+
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+    });
+  } catch (error) {
+    console.error("Error logging in user:", error);
+    return res.status(500).json({ error: "Failed to log in user" });
+  }
+};
+
 module.exports = {
   createUser,
   getAllUsers,
   getUserById,
   updateUser,
   deleteUser,
+  loginUser,
 };
