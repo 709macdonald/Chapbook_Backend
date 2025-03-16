@@ -1,7 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
 const { v4: uuidv4 } = require("uuid");
-const bcrypt = require("bcryptjs");
 
 // Define the User model
 const User = sequelize.define("User", {
@@ -29,18 +28,7 @@ const User = sequelize.define("User", {
   },
 });
 
-User.beforeCreate(async (user) => {
-  const salt = await bcrypt.genSalt(10);
-  user.password = await bcrypt.hash(user.password, salt);
-});
-
-User.beforeUpdate(async (user) => {
-  if (user.changed("password")) {
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(user.password, salt);
-  }
-});
-
+// No need to hash password, just save it as is
 async function syncUserModel() {
   try {
     await User.sync();

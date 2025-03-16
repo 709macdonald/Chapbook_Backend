@@ -6,15 +6,6 @@ dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// PASSWORDS
-const hashPassword = async (password) => {
-  return await bcrypt.hash(password, 10);
-};
-
-const comparePassword = async (password, hashedPassword) => {
-  return await bcrypt.compare(password, hashedPassword);
-};
-
 // JWT TOKENS
 const generateToken = (userId) => {
   return jwt.sign({ userId }, JWT_SECRET, {
@@ -30,4 +21,4 @@ const verifyToken = (token) => {
   }
 };
 
-module.exports = { hashPassword, comparePassword, generateToken, verifyToken };
+module.exports = { generateToken, verifyToken };

@@ -1,10 +1,5 @@
 const User = require("../models/user");
-const {
-  hashPassword,
-  comparePassword,
-  generateToken,
-  verifyToken,
-} = require("../utils/auth.utils");
+const { generateToken, verifyToken } = require("../utils/auth.utils");
 
 // EDIT USER TABLE
 const createUser = async (req, res) => {
@@ -16,13 +11,11 @@ const createUser = async (req, res) => {
       return res.status(400).json({ error: "Email is already in use" });
     }
 
-    const hashedPassword = await hashPassword(password);
-
     const newUser = await User.create({
       firstName,
       lastName,
       email,
-      password: hashedPassword,
+      password, // No hashing now
     });
 
     return res.status(201).json({
@@ -84,7 +77,7 @@ const updateUser = async (req, res) => {
     if (firstName) user.firstName = firstName;
     if (lastName) user.lastName = lastName;
     if (email) user.email = email;
-    if (password) user.password = password; // Will be hashed automatically
+    if (password) user.password = password; // No hashing now
 
     await user.save(); // Saves the changes
 
@@ -132,9 +125,8 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ error: "Invalid email or password" });
     }
 
-    const isPasswordValid = await comparePassword(password, user.password);
-
-    if (!isPasswordValid) {
+    if (password !== user.password) {
+      // No password comparison, just check plain text
       return res.status(400).json({ error: "Invalid email or password" });
     }
 
