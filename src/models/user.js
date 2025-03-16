@@ -2,12 +2,11 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
 const { v4: uuidv4 } = require("uuid");
 
-// Define the User model
 const User = sequelize.define("User", {
   userId: {
     type: DataTypes.UUID,
     primaryKey: true,
-    defaultValue: () => uuidv4(), // Generates a UUID v4 by default
+    defaultValue: () => uuidv4(),
   },
   firstName: {
     type: DataTypes.STRING,
@@ -28,7 +27,6 @@ const User = sequelize.define("User", {
   },
 });
 
-// No need to hash password, just save it as is
 async function syncUserModel() {
   try {
     await User.sync();

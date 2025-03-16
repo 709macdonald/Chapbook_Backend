@@ -1,5 +1,6 @@
 const User = require("../models/user");
 const { generateToken, verifyToken } = require("../utils/auth.utils");
+const bcrypt = require("bcrypt");
 
 // EDIT USER TABLE
 const createUser = async (req, res) => {
@@ -11,11 +12,13 @@ const createUser = async (req, res) => {
       return res.status(400).json({ error: "Email is already in use" });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const newUser = await User.create({
       firstName,
       lastName,
       email,
-      password, // No hashing now
+      password: hashedPassword,
     });
 
     return res.status(201).json({
@@ -125,8 +128,9 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ error: "Invalid email or password" });
     }
 
-    if (password !== user.password) {
-      // No password comparison, just check plain text
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
       return res.status(400).json({ error: "Invalid email or password" });
     }
 
