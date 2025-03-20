@@ -1,15 +1,7 @@
-const express = require("express");
+const app = require("./app");
 const sequelize = require("./config/database");
-const userRoutes = require("./routes/user.routes");
-const app = express();
+
 const port = 5005;
-
-app.use(express.json());
-app.use("/api", userRoutes);
-
-app.get("/", (req, res) => {
-  res.send("Hello World");
-});
 
 sequelize
   .sync()
@@ -22,4 +14,3 @@ sequelize
   .catch((error) => {
     console.error("Unable to sync database:", error);
   });
-``;
