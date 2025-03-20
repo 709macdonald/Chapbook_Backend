@@ -39,8 +39,8 @@ describe("POST and PUT /api/users", () => {
 
     // Check if the update was successful
     expect(putResponse.status).toBe(200);
-    expect(putResponse.body.firstName).toBe(updatedUser.firstName); // Should now be "Trevor Updated"
-    expect(putResponse.body.lastName).toBe(updatedUser.lastName); // Should now be "Doe Updated"
-    expect(putResponse.body.email).toBe(updatedUser.email); // Check updated email
+    expect(putResponse.body.user.firstName).toBe(updatedUser.firstName); // Accessing nested 'user' object
+    expect(putResponse.body.user.lastName).toBe(updatedUser.lastName); // Accessing nested 'user' object
+    expect(putResponse.body.user.email).toBe(updatedUser.email); // Accessing nested 'user' object
   });
 });
