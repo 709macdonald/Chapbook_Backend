@@ -36,8 +36,8 @@ describe("POST and PUT /api/users", () => {
 describe("GET /api/users/:id", () => {
   it("should return the user by userId with status 200", async () => {
     const newUser = {
-      firstName: "Trevor",
-      lastName: "Doe",
+      firstName: "Cre",
+      lastName: "Ation",
       email: `${uuidv4()}@gmail.com`, // Fixed the missing backticks
       password: "securepassword123",
     };
@@ -68,8 +68,8 @@ describe("GET /api/users", () => {
 describe("DELETE /api/users/:id", () => {
   it("should delete the user and return status 200", async () => {
     const newUser = {
-      firstName: "Trevor",
-      lastName: "Doe",
+      firstName: "Danny",
+      lastName: "Deleto",
       email: `${uuidv4()}@gmail.com`,
       password: "securepassword123",
     };
@@ -124,5 +124,57 @@ describe("POST /api/login", () => {
 
     expect(response.status).toBe(400);
     expect(response.body.error).toBe("Invalid email or password");
+  });
+});
+
+describe("GET /api/profile", () => {
+  it("should return the user profile for valid token", async () => {
+    const newUser = {
+      firstName: "Petey",
+      lastName: "Profile",
+      email: `${uuidv4()}@gmail.com`,
+      password: "securepassword123",
+    };
+
+    const postResponse = await request(app).post("/api/users").send(newUser);
+
+    const loginCredentials = {
+      email: newUser.email,
+      password: newUser.password,
+    };
+
+    const loginResponse = await request(app)
+      .post("/api/login")
+      .send(loginCredentials);
+
+    const token = loginResponse.body.token;
+
+    const response = await request(app)
+      .get("/api/profile")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty("userId");
+    expect(response.body.firstName).toBe(newUser.firstName);
+    expect(response.body.lastName).toBe(newUser.lastName);
+    expect(response.body.email).toBe(newUser.email);
+  });
+
+  it("should return 401 for a protected route if no token is provided", async () => {
+    const response = await request(app).get("/api/profile");
+
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBe("No token provided");
+  });
+
+  it("should return 401 for an invalid or expired token", async () => {
+    const invalidToken = "invalid.jwt.token";
+
+    const response = await request(app)
+      .get("/api/profile")
+      .set("Authorization", `Bearer ${invalidToken}`);
+
+    expect(response.status).toBe(401); // Unauthorized error for invalid token
+    expect(response.body.error).toBe("Invalid or expired token");
   });
 });
