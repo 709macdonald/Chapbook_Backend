@@ -64,3 +64,25 @@ describe("GET /api/users", () => {
     expect(response.body).toBeInstanceOf(Array);
   });
 });
+
+describe("DELETE /api/users/:id", () => {
+  it("should delete the user and return status 200", async () => {
+    const newUser = {
+      firstName: "Trevor",
+      lastName: "Doe",
+      email: `${uuidv4()}@gmail.com`,
+      password: "securepassword123",
+    };
+
+    const postResponse = await request(app).post("/api/users").send(newUser);
+    const { userId } = postResponse.body.user;
+
+    const deleteResponse = await request(app).delete(`/api/users/${userId}`);
+    expect(deleteResponse.status).toBe(200);
+    expect(deleteResponse.body.message).toBe("User deleted successfully");
+
+    const getResponse = await request(app).get(`/api/users/${userId}`);
+    expect(getResponse.status).toBe(404);
+    expect(getResponse.body.error).toBe("User not found");
+  });
+});
