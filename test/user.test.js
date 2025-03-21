@@ -2,6 +2,8 @@ const request = require("supertest");
 const app = require("../src/app");
 const { v4: uuidv4 } = require("uuid");
 
+// CRUD TESTS
+
 describe("POST and PUT /api/users", () => {
   it("should create a new user, update it, and return the updated user with status 200", async () => {
     const newUser = {
@@ -174,7 +176,115 @@ describe("GET /api/profile", () => {
       .get("/api/profile")
       .set("Authorization", `Bearer ${invalidToken}`);
 
-    expect(response.status).toBe(401); // Unauthorized error for invalid token
+    expect(response.status).toBe(401);
     expect(response.body.error).toBe("Invalid or expired token");
+  });
+});
+
+// CHAT GPT RECOMMENDED TESTS
+
+describe("POST /api/users (Edge Case Tests)", () => {
+  it("should return an error when creating a user with missing fields", async () => {
+    const newUser = {
+      firstName: "Trevor",
+    };
+
+    const response = await request(app).post("/api/users").send(newUser);
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe("Missing required fields");
+  });
+
+  it("should return an error when creating a user with invalid email format", async () => {
+    const newUser = {
+      firstName: "Trevor",
+      lastName: "Doe",
+      email: "invalid-email",
+      password: "securepassword123",
+    };
+
+    const response = await request(app).post("/api/users").send(newUser);
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe("Invalid email format");
+  });
+});
+
+describe("POST /api/login (Token Expiration)", () => {
+  it("should return an error for an expired token", async () => {
+    const newUser = {
+      firstName: "Trevor",
+      lastName: "Doe",
+      email: `${uuidv4()}@gmail.com`,
+      password: "securepassword123",
+    };
+
+    const postResponse = await request(app).post("/api/users").send(newUser);
+    const loginResponse = await request(app).post("/api/login").send({
+      email: newUser.email,
+      password: newUser.password,
+    });
+
+    const { token } = loginResponse.body;
+
+    setTimeout(async () => {
+      const response = await request(app)
+        .get("/api/profile")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(401);
+      expect(response.body.error).toBe("Invalid or expired token");
+    }, 3600000);
+  });
+});
+
+describe("Authorization Tests", () => {
+  it("should return 401 for /profile if no token is provided", async () => {
+    const response = await request(app).get("/api/profile");
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBe("No token provided");
+  });
+
+  it("should return 401 for /profile if an invalid token is provided", async () => {
+    const response = await request(app)
+      .get("/api/profile")
+      .set("Authorization", "Bearer invalidtoken");
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBe("Invalid or expired token");
+  });
+});
+
+describe("Concurrent User Update (Concurrency Testing)", () => {
+  it("should handle concurrent user updates properly", async () => {
+    const newUser = {
+      firstName: "Trevor",
+      lastName: "Doe",
+      email: `${uuidv4()}@gmail.com`,
+      password: "securepassword123",
+    };
+
+    const postResponse = await request(app).post("/api/users").send(newUser);
+    const { userId } = postResponse.body.user;
+
+    const updatePromises = [
+      request(app).put(`/api/users/${userId}`).send({ firstName: "Updated1" }),
+      request(app).put(`/api/users/${userId}`).send({ firstName: "Updated2" }),
+    ];
+
+    const [response1, response2] = await Promise.all(updatePromises);
+
+    console.log("PUT Response 1:", response1.body);
+    console.log("PUT Response 2:", response2.body);
+
+    expect(response1.body).toHaveProperty("user");
+    expect(response2.body).toHaveProperty("user");
+
+    expect(response1.body.user).toHaveProperty("firstName");
+    expect(response2.body.user).toHaveProperty("firstName");
+
+    expect([
+      response1.body.user.firstName,
+      response2.body.user.firstName,
+    ]).toEqual(expect.arrayContaining(["Updated1", "Updated2"]));
   });
 });

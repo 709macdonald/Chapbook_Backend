@@ -7,13 +7,27 @@ const createUser = async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
 
+    // Validate required fields
+    if (!firstName || !lastName || !email || !password) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Validate email format
+    const emailRegex = /\S+@\S+\.\S+/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: "Invalid email format" });
+    }
+
+    // Check if the email is already in use
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ error: "Email is already in use" });
     }
 
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Create new user
     const newUser = await User.create({
       firstName,
       lastName,
@@ -21,6 +35,7 @@ const createUser = async (req, res) => {
       password: hashedPassword,
     });
 
+    // Return the response
     return res.status(201).json({
       message: "User created successfully",
       user: {
