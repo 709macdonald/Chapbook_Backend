@@ -86,3 +86,43 @@ describe("DELETE /api/users/:id", () => {
     expect(getResponse.body.error).toBe("User not found");
   });
 });
+
+describe("POST /api/login", () => {
+  it("should return a token for valid login", async () => {
+    const newUser = {
+      firstName: "Logan",
+      lastName: "Tester",
+      email: `${uuidv4()}@gmail.com`,
+      password: "securepassword123",
+    };
+
+    await request(app).post("/api/users").send(newUser);
+
+    const loginCredentials = {
+      email: newUser.email,
+      password: newUser.password,
+    };
+
+    const response = await request(app)
+      .post("/api/login")
+      .send(loginCredentials);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty("token");
+    expect(typeof response.body.token).toBe("string");
+  });
+
+  it("should return an error for invalid login credentials", async () => {
+    const invalidCredentials = {
+      email: "wrongemail@gmail.com",
+      password: "wrongpassword",
+    };
+
+    const response = await request(app)
+      .post("/api/login")
+      .send(invalidCredentials);
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe("Invalid email or password");
+  });
+});
