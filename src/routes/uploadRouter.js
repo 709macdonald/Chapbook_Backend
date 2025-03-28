@@ -1,6 +1,5 @@
-// src/routes/uploadRouter.js
 const { createUploadthing } = require("uploadthing/express");
-const { verifyToken } = require("../utils/auth"); // ✅ adjust path if needed
+const { verifyToken } = require("../utils/auth");
 
 const f = createUploadthing();
 
@@ -21,19 +20,16 @@ exports.uploadRouter = {
       }
 
       const token = authHeader.split(" ")[1];
-      const user = verifyToken(token); // ✅ your existing function
+      const user = verifyToken(token);
 
       if (!user) {
         throw new Error("Unauthorized: Invalid or expired token");
       }
 
-      // This gets passed into onUploadComplete
       return { userId: user.userId };
     })
     .onUploadComplete(async ({ file, metadata }) => {
       const userId = metadata.userId;
       console.log(`✅ User ${userId} uploaded:`, file);
-
-      // ✅ Optional: Save this file info and userId to your database
     }),
 };
