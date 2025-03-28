@@ -17,7 +17,7 @@ const verifyToken = (token) => {
   try {
     return jwt.verify(token, JWT_SECRET);
   } catch (error) {
-    return null;
+    return null; 
   }
 };
 

@@ -169,7 +169,7 @@ const getProfile = async (req, res) => {
       return res.status(401).json({ error: "No token provided" });
     }
 
-    const decoded = verifyToken(token);
+    const decoded = verifyToken(token); // Verify the token
 
     if (!decoded) {
       return res.status(401).json({ error: "Invalid or expired token" });
