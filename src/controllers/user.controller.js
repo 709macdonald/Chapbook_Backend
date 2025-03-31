@@ -198,5 +198,4 @@ module.exports = {
   deleteUser,
   loginUser,
   getProfile,
-  fakecall,
 };
