@@ -38,4 +38,18 @@ router.post("/upload-local", upload.array("files", 10), (req, res) => {
   res.json(uploadedFiles);
 });
 
+router.delete("/delete-local/:filename", (req, res) => {
+  const filename = req.params.filename;
+  const filePath = path.join(uploadDir, filename);
+
+  fs.unlink(filePath, (err) => {
+    if (err) {
+      console.error("❌ Error deleting file:", err);
+      return res.status(500).json({ error: "File deletion failed" });
+    }
+    console.log("✅ Successfully deleted file:", filename);
+    res.json({ message: "File deleted successfully" });
+  });
+});
+
 module.exports = router;
