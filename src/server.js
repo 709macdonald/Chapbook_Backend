@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 const userRoutes = require("./routes/user.routes");
 const uploadRoutes = require("./routes/uploadRouter");
 const sequelize = require("./config/database");
+const multerUploadRoutes = require("./routes/multerUploadRouter");
 
 dotenv.config();
 
@@ -42,6 +43,8 @@ app.use(express.json());
 
 app.use("/api", userRoutes);
 app.use("/api", uploadRoutes);
+app.use("/uploads", express.static("uploads"));
+app.use("/api", multerUploadRoutes);
 
 console.log("🔍 Registered routes:");
 function printRoutes(stack, basePath = "") {
