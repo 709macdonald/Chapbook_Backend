@@ -5,37 +5,37 @@ const fs = require("fs");
 
 const router = express.Router();
 
-// Create uploads folder if it doesn't exist
+// Make sure the uploads folder exists
 const uploadDir = path.join(__dirname, "..", "uploads");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
-// Configure multer
+// Configure storage
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
+  destination: (req, file, cb) => {
     cb(null, uploadDir);
   },
-  filename: function (req, file, cb) {
+  filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + "-" + file.originalname);
+    const ext = path.extname(file.originalname);
+    cb(null, uniqueSuffix + ext);
   },
 });
 
 const upload = multer({ storage });
 
 router.post("/upload-local", upload.array("files", 10), (req, res) => {
-  console.log("📦 Received files:", req.files);
-
   const uploadedFiles = req.files.map((file) => ({
-    url: `http://localhost:5005/uploads/${file.filename}`,
+    fileUrl: `http://localhost:5005/uploads/${file.filename}`,
     name: file.originalname,
     key: file.filename,
     size: file.size,
     uploadedAt: new Date().toISOString(),
   }));
 
-  res.status(200).json(uploadedFiles);
+  console.log("📁 Uploaded locally:", uploadedFiles);
+  res.json(uploadedFiles);
 });
 
 module.exports = router;
