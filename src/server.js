@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const userRoutes = require("./routes/user.routes");
+const fileRoutes = require("./routes/file.routes");
 const uploadRoutes = require("./routes/uploadRouter");
 const sequelize = require("./config/database");
 const multerUploadRoutes = require("./routes/multerUploadRouter");
@@ -44,6 +45,7 @@ app.use(express.json());
 
 app.use("/api", userRoutes);
 app.use("/api", uploadRoutes);
+app.use("/api", fileRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/api", multerUploadRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
