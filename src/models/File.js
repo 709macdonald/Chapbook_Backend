@@ -13,13 +13,17 @@ const File = sequelize.define("File", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  fileContent: {
+    type: DataTypes.TEXT("long"), // 👈 ADD THIS
+    allowNull: true,
+  },
   fileUrl: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   serverKey: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   type: {
     type: DataTypes.STRING,

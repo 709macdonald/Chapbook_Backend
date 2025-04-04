@@ -14,14 +14,17 @@ const createFile = async (req, res) => {
       matchedWords,
       locations,
       tags,
-      UserId, // 👈 Add this
+      UserId,
+      fileContent, // 👈 Add this if it’s not listed
     } = req.body;
+
+    console.log("📄 Saving new file:", name);
+    console.log("🧠 fileContent received:", fileContent); // 👈 Add this log
 
     if (!UserId) {
       return res.status(400).json({ error: "UserId is required" });
     }
 
-    // Optional: prevent duplicate file per user by name+text
     const existing = await File.findOne({ where: { name, text, UserId } });
     if (existing) {
       return res.status(409).json({ error: "Duplicate file (name + content)" });
@@ -33,6 +36,7 @@ const createFile = async (req, res) => {
       serverKey,
       type,
       date,
+      fileContent, // 👈 Add this to the DB save too!
       text,
       matchedWords,
       locations:
