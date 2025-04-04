@@ -8,5 +8,7 @@ router.get("/files", fileController.getAllFiles);
 router.get("/files/:id", fileController.getFileById);
 router.put("/files/:id", fileController.updateFile);
 router.delete("/files/:id", fileController.deleteFile);
+router.delete("/files", fileController.deleteAllFiles); // DELETE /api/files
+router.delete("/files/reset/:userId", fileController.resetUserFiles);
 
 module.exports = router;

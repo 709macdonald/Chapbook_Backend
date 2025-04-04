@@ -1,4 +1,5 @@
 const File = require("../models/File");
+const jwt = require("jsonwebtoken");
 
 // Create a new file entry
 const createFile = async (req, res) => {
@@ -34,9 +35,10 @@ const createFile = async (req, res) => {
       date,
       text,
       matchedWords,
-      locations,
+      locations:
+        typeof locations === "string" ? JSON.parse(locations) : locations,
       tags,
-      UserId, // 👈 Save the user ID to the file
+      UserId,
     });
 
     return res.status(201).json(newFile);
@@ -115,10 +117,44 @@ const deleteFile = async (req, res) => {
   }
 };
 
+const deleteAllFiles = async (req, res) => {
+  try {
+    await File.destroy({ where: {} }); // deletes all records
+    res.status(200).json({ message: "All files deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting all files:", err);
+    res.status(500).json({ error: "Failed to delete all files" });
+  }
+};
+
+const resetUserFiles = async (req, res) => {
+  const { userId } = req.params;
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (!token) return res.status(401).json({ error: "No token provided" });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (decoded.userId !== userId) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    await File.destroy({ where: { UserId: userId } });
+    res.status(200).json({ message: "All user files deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting user files:", err);
+    res.status(500).json({ error: "Failed to delete user files" });
+  }
+};
+
 module.exports = {
   createFile,
   getAllFiles,
   getFileById,
   updateFile,
   deleteFile,
+  deleteAllFiles,
+  resetUserFiles,
 };
