@@ -74,7 +74,7 @@ app.get("/health", (req, res) => {
 
 async function startServer() {
   try {
-    await sequelize.sync();
+    await sequelize.sync({ alter: true }); // ✅ Safe update
     console.log("✅ Database synced");
 
     app.listen(port, () => {

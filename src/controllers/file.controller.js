@@ -1,4 +1,4 @@
-const { File } = require("../models/File");
+const File = require("../models/File");
 
 // Create a new file entry
 const createFile = async (req, res) => {
@@ -8,24 +8,38 @@ const createFile = async (req, res) => {
       fileUrl,
       serverKey,
       type,
+      date,
       text,
       matchedWords,
       locations,
       tags,
+      UserId, // 👈 Add this
     } = req.body;
 
-    const file = await File.create({
+    if (!UserId) {
+      return res.status(400).json({ error: "UserId is required" });
+    }
+
+    // Optional: prevent duplicate file per user by name+text
+    const existing = await File.findOne({ where: { name, text, UserId } });
+    if (existing) {
+      return res.status(409).json({ error: "Duplicate file (name + content)" });
+    }
+
+    const newFile = await File.create({
       name,
       fileUrl,
       serverKey,
       type,
+      date,
       text,
       matchedWords,
       locations,
       tags,
+      UserId, // 👈 Save the user ID to the file
     });
 
-    return res.status(201).json(file);
+    return res.status(201).json(newFile);
   } catch (error) {
     console.error("Error creating file:", error);
     return res.status(500).json({ error: "Failed to create file" });
@@ -34,11 +48,12 @@ const createFile = async (req, res) => {
 
 // Get all files
 const getAllFiles = async (req, res) => {
+  console.log("✅ getAllFiles triggered");
   try {
     const files = await File.findAll({ order: [["date", "DESC"]] });
     return res.status(200).json(files);
   } catch (error) {
-    console.error("Error fetching files:", error);
+    console.error("❌ Error fetching files:", error);
     return res.status(500).json({ error: "Failed to fetch files" });
   }
 };

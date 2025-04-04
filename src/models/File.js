@@ -1,46 +1,72 @@
-module.exports = (sequelize, DataTypes) => {
-  const File = sequelize.define("File", {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    fileUrl: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    serverKey: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    type: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    date: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
-    text: {
-      type: DataTypes.TEXT,
-    },
-    matchedWords: {
-      type: DataTypes.ARRAY(DataTypes.STRING),
-      defaultValue: [],
-    },
-    locations: {
-      type: DataTypes.JSONB,
-      defaultValue: [],
-    },
-    tags: {
-      type: DataTypes.ARRAY(DataTypes.STRING),
-      defaultValue: [],
-    },
-  });
+// models/File.js
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
+const User = require("./User"); // 👈 import User model
 
-  return File;
-};
+const File = sequelize.define("File", {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true,
+  },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  fileUrl: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  serverKey: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  type: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  date: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW,
+  },
+  text: {
+    type: DataTypes.TEXT,
+  },
+  matchedWords: {
+    type: DataTypes.TEXT,
+    get() {
+      const raw = this.getDataValue("matchedWords");
+      return raw ? raw.split(",") : [];
+    },
+    set(val) {
+      this.setDataValue(
+        "matchedWords",
+        Array.isArray(val) ? val.join(",") : val
+      );
+    },
+  },
+  locations: {
+    type: DataTypes.JSON,
+    defaultValue: [],
+  },
+  tags: {
+    type: DataTypes.TEXT,
+    get() {
+      const raw = this.getDataValue("tags");
+      return raw ? raw.split(",") : [];
+    },
+    set(val) {
+      this.setDataValue("tags", Array.isArray(val) ? val.join(",") : val);
+    },
+  },
+  UserId: {
+    type: DataTypes.UUID,
+    allowNull: false,
+  },
+});
+
+// 👇 Association: One User has many Files, File belongs to a User
+User.hasMany(File, { foreignKey: "UserId", onDelete: "CASCADE" });
+File.belongsTo(User, { foreignKey: "UserId" });
+
+module.exports = File;
