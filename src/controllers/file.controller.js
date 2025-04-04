@@ -48,11 +48,19 @@ const createFile = async (req, res) => {
   }
 };
 
-// Get all files
+// Get all users files
 const getAllFiles = async (req, res) => {
   console.log("✅ getAllFiles triggered");
   try {
-    const files = await File.findAll({ order: [["date", "DESC"]] });
+    // Get the userId from the auth middleware
+    const userId = req.userId;
+
+    // Filter files by user ID
+    const files = await File.findAll({
+      where: { UserId: userId },
+      order: [["date", "DESC"]],
+    });
+
     return res.status(200).json(files);
   } catch (error) {
     console.error("❌ Error fetching files:", error);
@@ -64,7 +72,14 @@ const getAllFiles = async (req, res) => {
 const getFileById = async (req, res) => {
   try {
     const { id } = req.params;
-    const file = await File.findByPk(id);
+    const userId = req.userId;
+
+    const file = await File.findOne({
+      where: {
+        id: id,
+        UserId: userId, // Only get the file if it belongs to this user
+      },
+    });
 
     if (!file) {
       return res.status(404).json({ error: "File not found" });
@@ -82,8 +97,14 @@ const updateFile = async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
+    const userId = req.userId;
 
-    const file = await File.findByPk(id);
+    const file = await File.findOne({
+      where: {
+        id: id,
+        UserId: userId, // Only update files that belong to this user
+      },
+    });
 
     if (!file) {
       return res.status(404).json({ error: "File not found" });
@@ -102,7 +123,14 @@ const updateFile = async (req, res) => {
 const deleteFile = async (req, res) => {
   try {
     const { id } = req.params;
-    const file = await File.findByPk(id);
+    const userId = req.userId;
+
+    const file = await File.findOne({
+      where: {
+        id: id,
+        UserId: userId, // Only delete files that belong to this user
+      },
+    });
 
     if (!file) {
       return res.status(404).json({ error: "File not found" });
@@ -117,10 +145,17 @@ const deleteFile = async (req, res) => {
   }
 };
 
+// Delete all files for the current user
 const deleteAllFiles = async (req, res) => {
   try {
-    await File.destroy({ where: {} }); // deletes all records
-    res.status(200).json({ message: "All files deleted successfully" });
+    const userId = req.userId;
+
+    // Only delete files for the current user
+    await File.destroy({
+      where: { UserId: userId },
+    });
+
+    res.status(200).json({ message: "All your files deleted successfully" });
   } catch (err) {
     console.error("Error deleting all files:", err);
     res.status(500).json({ error: "Failed to delete all files" });
