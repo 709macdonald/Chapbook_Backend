@@ -7,8 +7,14 @@ const uploadRoutes = require("./routes/uploadRouter");
 const sequelize = require("./config/database");
 const multerUploadRoutes = require("./routes/multerUploadRouter");
 const path = require("path");
+const aiRoutes = require("./routes/ai.routes");
 
 dotenv.config();
+
+console.log(
+  "OPENAI_API_KEY:",
+  process.env.OPENAI_API_KEY ? "✅ Loaded" : "❌ Missing"
+);
 
 console.log("UploadThing Environment Variables:");
 console.log(
@@ -49,6 +55,8 @@ app.use("/api", fileRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/api", multerUploadRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+app.use("/api/ai", aiRoutes);
 
 console.log("🔍 Registered routes:");
 function printRoutes(stack, basePath = "") {
