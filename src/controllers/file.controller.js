@@ -1,5 +1,13 @@
 const File = require("../models/File");
 const jwt = require("jsonwebtoken");
+const AWS = require("aws-sdk");
+
+// Initialize S3 client
+const s3 = new AWS.S3({
+  region: process.env.AWS_REGION,
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+});
 
 // Create a new file entry
 const createFile = async (req, res) => {
@@ -15,7 +23,7 @@ const createFile = async (req, res) => {
       locations,
       tags,
       UserId,
-      fileContent, // 👈 Add this if it’s not listed
+      fileContent, // 👈 Add this if it's not listed
     } = req.body;
 
     console.log("📄 Saving new file:", name);
@@ -140,6 +148,22 @@ const deleteFile = async (req, res) => {
       return res.status(404).json({ error: "File not found" });
     }
 
+    // Delete from S3 if using S3 storage and we have a serverKey
+    if (process.env.USE_S3 === "true" && file.serverKey) {
+      try {
+        const params = {
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: file.serverKey,
+        };
+
+        await s3.deleteObject(params).promise();
+        console.log(`✅ Deleted file from S3: ${file.serverKey}`);
+      } catch (s3Error) {
+        console.error("❌ Error deleting from S3:", s3Error);
+        // Continue with DB deletion even if S3 deletion fails
+      }
+    }
+
     await file.destroy();
 
     return res.status(200).json({ message: "File deleted successfully" });
@@ -153,6 +177,34 @@ const deleteFile = async (req, res) => {
 const deleteAllFiles = async (req, res) => {
   try {
     const userId = req.userId;
+
+    // If using S3, get all files to delete them from S3 first
+    if (process.env.USE_S3 === "true") {
+      const files = await File.findAll({
+        where: { UserId: userId },
+      });
+
+      // Delete each file from S3
+      for (const file of files) {
+        if (file.serverKey) {
+          try {
+            const params = {
+              Bucket: process.env.S3_BUCKET_NAME,
+              Key: file.serverKey,
+            };
+
+            await s3.deleteObject(params).promise();
+            console.log(`✅ Deleted file from S3: ${file.serverKey}`);
+          } catch (s3Error) {
+            console.error(
+              `❌ Error deleting file from S3: ${file.serverKey}`,
+              s3Error
+            );
+            // Continue with next file even if this one fails
+          }
+        }
+      }
+    }
 
     // Only delete files for the current user
     await File.destroy({
@@ -178,6 +230,34 @@ const resetUserFiles = async (req, res) => {
 
     if (decoded.userId !== userId) {
       return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    // If using S3, get all files to delete them from S3 first
+    if (process.env.USE_S3 === "true") {
+      const files = await File.findAll({
+        where: { UserId: userId },
+      });
+
+      // Delete each file from S3
+      for (const file of files) {
+        if (file.serverKey) {
+          try {
+            const params = {
+              Bucket: process.env.S3_BUCKET_NAME,
+              Key: file.serverKey,
+            };
+
+            await s3.deleteObject(params).promise();
+            console.log(`✅ Deleted file from S3: ${file.serverKey}`);
+          } catch (s3Error) {
+            console.error(
+              `❌ Error deleting file from S3: ${file.serverKey}`,
+              s3Error
+            );
+            // Continue with next file even if this one fails
+          }
+        }
+      }
     }
 
     await File.destroy({ where: { UserId: userId } });

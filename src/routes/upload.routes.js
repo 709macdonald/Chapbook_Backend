@@ -1,16 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const uploadController = require("../controllers/upload.controller.js");
-const upload = require("../middleware/multer.middleware"); // ✅ Correct middleware path
+const upload = require("../middleware/multer.middleware"); // Switches based on USE_S3
 
-// LOCAL UPLOAD ROUTE
-router.post(
-  "/upload-local",
-  upload.array("files", 10),
-  uploadController.uploadFiles
-);
+// Unified Upload Route
+router.post("/upload", upload.array("files", 10), uploadController.uploadFiles);
+router.get("/signed-url/:key", uploadController.getSignedUrl);
 
-// DELETE FILE ROUTE
+// Local delete only — doesn't work for S3
 router.delete("/delete-local/:filename", uploadController.deleteFile);
 
 module.exports = router;
