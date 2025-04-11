@@ -12,6 +12,23 @@ const uploadRoutes = require("./routes/upload.routes");
 const aiRoutes = require("./routes/ai.routes");
 const sequelize = require("./config/database");
 
+// Check required S3 environment variables
+const requiredS3Vars = [
+  "AWS_REGION",
+  "AWS_ACCESS_KEY_ID",
+  "AWS_SECRET_ACCESS_KEY",
+  "S3_BUCKET_NAME",
+];
+
+requiredS3Vars.forEach((varName) => {
+  if (!process.env[varName]) {
+    console.error(`❌ Missing required environment variable: ${varName}`);
+    console.error("S3 storage will not work properly without this variable.");
+  } else {
+    console.log(`✅ ${varName} configured`);
+  }
+});
+
 const app = express();
 const port = 5005;
 
@@ -34,13 +51,11 @@ app.use(express.json());
 
 // ✅ Route setup
 app.use("/api", userRoutes);
-app.use("/api", uploadRoutes); // uses multer + S3 or local
+app.use("/api", uploadRoutes); // now exclusively uses S3
 app.use("/api", fileRoutes);
 app.use("/api/ai", aiRoutes);
 
-// ✅ Serve uploaded files locally when USE_S3 is false
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
+// Log registered routes
 console.log("🔍 Registered routes:");
 function printRoutes(stack, basePath = "") {
   stack.forEach((r) => {
@@ -72,9 +87,7 @@ async function startServer() {
 
     app.listen(port, () => {
       console.log(`🚀 Server running at http://localhost:${port}`);
-      console.log(
-        `Upload endpoint: http://localhost:${port}/api/upload (S3: ${process.env.USE_S3})`
-      );
+      console.log(`S3 Upload endpoint: http://localhost:${port}/api/upload`);
     });
   } catch (error) {
     console.error("❌ Error starting server:", error);

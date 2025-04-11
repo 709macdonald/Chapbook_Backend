@@ -1,6 +1,4 @@
-const path = require("path");
-const fs = require("fs");
-const AWS = require("aws-sdk"); // Use AWS SDK v2 consistently
+const AWS = require("aws-sdk");
 
 // Initialize S3 client for signed URLs
 const s3 = new AWS.S3({
@@ -9,10 +7,8 @@ const s3 = new AWS.S3({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
-const uploadDir = path.join(__dirname, "..", "uploads");
-
 /**
- * Handle file uploads from multer/multer-s3
+ * Handle file uploads to S3
  */
 const uploadFiles = (req, res) => {
   try {
@@ -22,49 +18,61 @@ const uploadFiles = (req, res) => {
     }
 
     const uploadedFiles = req.files.map((file) => {
-      // Log file structure to help with debugging
-      console.log("File object structure:", JSON.stringify(file, null, 2));
+      // Ensure the file has a location property (S3 URL)
+      if (!file.location) {
+        console.error("Missing S3 file location:", file);
+        throw new Error("S3 upload configuration error");
+      }
 
       return {
-        fileUrl:
-          process.env.USE_S3 === "true"
-            ? file.location // S3 URL from multer-s3 v2
-            : `http://localhost:5005/uploads/${file.filename}`,
+        fileUrl: file.location, // S3 URL from multer-s3 v2
         name: file.originalname,
-        key: file.key || file.filename, // S3: file.key | Local: file.filename
+        key: file.key, // S3 object key for future access/deletion
         size: file.size,
         uploadedAt: new Date().toISOString(),
       };
     });
 
-    console.log("📁 Uploaded:", uploadedFiles);
+    console.log("📁 Uploaded to S3:", uploadedFiles);
     return res.json(uploadedFiles);
   } catch (error) {
-    console.error("❌ Upload error:", error);
-    return res.status(500).json({ error: "File upload failed" });
+    console.error("❌ S3 Upload error:", error);
+    return res
+      .status(500)
+      .json({ error: "File upload to S3 failed: " + error.message });
   }
 };
 
 /**
- * Delete a file (local storage only)
+ * Delete a file from S3
+ * Maintains the original function name to avoid changing the API
  */
-const deleteFile = (req, res) => {
-  const filename = req.params.filename;
-  const filePath = path.join(uploadDir, filename);
+const deleteFile = async (req, res) => {
+  const key = req.params.filename; // Use filename to maintain compatibility with original code
 
-  fs.unlink(filePath, (err) => {
-    if (err) {
-      console.error("❌ Error deleting file:", err);
-      return res.status(500).json({ error: "File deletion failed" });
-    }
+  if (!key) {
+    return res.status(400).json({ error: "Missing file key" });
+  }
 
-    console.log("✅ Successfully deleted file:", filename);
-    return res.json({ message: "File deleted successfully" });
-  });
+  const params = {
+    Bucket: process.env.S3_BUCKET_NAME,
+    Key: key,
+  };
+
+  try {
+    await s3.deleteObject(params).promise();
+    console.log("✅ Successfully deleted file from S3:", key);
+    return res.json({ message: "File deleted successfully from S3" });
+  } catch (error) {
+    console.error("❌ Error deleting file from S3:", error);
+    return res
+      .status(500)
+      .json({ error: "S3 file deletion failed: " + error.message });
+  }
 };
 
 /**
- * Generate a signed URL for S3 files using AWS SDK v2
+ * Generate a signed URL for S3 files
  */
 const getSignedUrl = (req, res) => {
   const { key } = req.params;
@@ -91,6 +99,6 @@ const getSignedUrl = (req, res) => {
 
 module.exports = {
   uploadFiles,
-  deleteFile,
+  deleteFile, // Using original function name
   getSignedUrl,
 };

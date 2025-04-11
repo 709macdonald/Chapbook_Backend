@@ -1,13 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const uploadController = require("../controllers/upload.controller.js");
-const upload = require("../middleware/multer.middleware"); // Switches based on USE_S3
+const upload = require("../middleware/multer.middleware");
 
-// Unified Upload Route
+// File upload route (S3 only)
 router.post("/upload", upload.array("files", 10), uploadController.uploadFiles);
+
+// Get signed URL for S3 file access
 router.get("/signed-url/:key", uploadController.getSignedUrl);
 
-// Local delete only — doesn't work for S3
+// Delete from S3 - using the original function name
 router.delete("/delete-local/:filename", uploadController.deleteFile);
 
 module.exports = router;
