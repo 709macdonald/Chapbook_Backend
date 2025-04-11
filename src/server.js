@@ -3,31 +3,12 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const userRoutes = require("./routes/user.routes");
 const fileRoutes = require("./routes/file.routes");
-const uploadRoutes = require("./routes/upload.routes"); // ✅ renamed from multerUploadRouter
+const uploadRoutes = require("./routes/upload.routes");
 const aiRoutes = require("./routes/ai.routes");
 const sequelize = require("./config/database");
 const path = require("path");
 
 dotenv.config();
-
-console.log(
-  "OPENAI_API_KEY:",
-  process.env.OPENAI_API_KEY ? "✅ Loaded" : "❌ Missing"
-);
-
-console.log("UploadThing Environment Variables:");
-console.log(
-  "UPLOADTHING_TOKEN:",
-  process.env.UPLOADTHING_TOKEN ? "Set" : "Not set"
-);
-console.log(
-  "UPLOADTHING_SECRET:",
-  process.env.UPLOADTHING_SECRET ? "Set" : "Not set"
-);
-console.log(
-  "UPLOADTHING_APP_ID:",
-  process.env.UPLOADTHING_APP_ID ? "Set" : "Not set"
-);
 
 const app = express();
 const port = 5005;
@@ -49,7 +30,7 @@ app.use(
 app.use(express.json());
 
 app.use("/api", userRoutes);
-app.use("/api", uploadRoutes); // ✅ new modularized route
+app.use("/api", uploadRoutes);
 app.use("/api", fileRoutes);
 app.use("/api/ai", aiRoutes);
 
@@ -79,7 +60,7 @@ app.get("/health", (req, res) => {
 
 async function startServer() {
   try {
-    await sequelize.sync({ alter: true }); // ✅ Safe update
+    await sequelize.sync({ alter: true });
     console.log("✅ Database synced");
 
     app.listen(port, () => {

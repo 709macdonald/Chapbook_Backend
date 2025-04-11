@@ -5,6 +5,11 @@ const uploadDir = path.join(__dirname, "..", "uploads");
 
 const uploadFiles = (req, res) => {
   try {
+    if (!req.files || req.files.length === 0) {
+      console.log("⚠️ No files provided.");
+      return res.status(500).json({ error: "File upload failed" });
+    }
+
     const uploadedFiles = req.files.map((file) => ({
       fileUrl: `http://localhost:5005/uploads/${file.filename}`,
       name: file.originalname,
