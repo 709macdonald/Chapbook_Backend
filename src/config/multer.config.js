@@ -1,11 +1,11 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const userRoutes = require("./routes/user.routes");
-const fileRoutes = require("./routes/file.routes");
-const uploadRoutes = require("./routes/upload.routes"); // ✅ renamed from multerUploadRouter
-const aiRoutes = require("./routes/ai.routes");
-const sequelize = require("./config/database");
+const userRoutes = require("../routes/user.routes");
+const fileRoutes = require("../routes/file.routes");
+const uploadRoutes = require("../routes/upload.routes"); // ✅ renamed from multerUploadRouter
+const aiRoutes = require("../routes/ai.routes");
+const sequelize = require("./database");
 const path = require("path");
 
 dotenv.config();

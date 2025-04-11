@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const uploadController = require("../controllers/upload.controller.js");
-const upload = require("../config/multer.config");
+const upload = require("../middleware/multer.middleware"); // ✅ Correct middleware path
 
 // LOCAL UPLOAD ROUTE
 router.post(
