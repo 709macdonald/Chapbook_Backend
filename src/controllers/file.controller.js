@@ -73,7 +73,39 @@ const getAllFiles = async (req, res) => {
       order: [["date", "DESC"]],
     });
 
-    return res.status(200).json(files);
+    // Process files to generate fresh signed URLs
+    const processedFiles = await Promise.all(
+      files.map(async (file) => {
+        const fileData = file.toJSON();
+
+        // Only regenerate URLs for files with a serverKey (S3 files)
+        if (fileData.serverKey) {
+          // Generate fresh signed URL
+          const params = {
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: fileData.serverKey,
+            Expires: 60 * 60, // Increase to 1 hour
+            ResponseContentDisposition: "inline",
+          };
+
+          try {
+            const signedUrl = s3.getSignedUrl("getObject", params);
+            fileData.fileUrl = signedUrl;
+            console.log(`✅ Generated fresh URL for ${fileData.name}`);
+          } catch (err) {
+            console.error(
+              `❌ Error generating signed URL for ${fileData.name}:`,
+              err
+            );
+            // Keep the existing URL
+          }
+        }
+
+        return fileData;
+      })
+    );
+
+    return res.status(200).json(processedFiles);
   } catch (error) {
     console.error("❌ Error fetching files:", error);
     return res.status(500).json({ error: "Failed to fetch files" });
