@@ -97,8 +97,43 @@ const getSignedUrl = (req, res) => {
   }
 };
 
+/**
+ * Delete multiple files from S3
+ */
+const deleteAllUserFilesFromS3 = async (req, res) => {
+  const { files } = req.body;
+
+  if (!Array.isArray(files) || files.length === 0) {
+    return res.status(400).json({ error: "No files provided to delete." });
+  }
+
+  const deleteObjects = files
+    .filter((file) => file.key)
+    .map((file) => ({ Key: file.key }));
+
+  const params = {
+    Bucket: process.env.S3_BUCKET_NAME,
+    Delete: { Objects: deleteObjects },
+  };
+
+  try {
+    const result = await s3.deleteObjects(params).promise();
+    console.log("🧹 Deleted multiple files from S3:", result.Deleted);
+    return res.json({
+      message: "Files deleted from S3",
+      deleted: result.Deleted,
+    });
+  } catch (error) {
+    console.error("❌ Error deleting multiple files from S3:", error);
+    return res.status(500).json({
+      error: "Failed to delete files from S3: " + error.message,
+    });
+  }
+};
+
 module.exports = {
   uploadFiles,
   deleteFile, // Using original function name
   getSignedUrl,
+  deleteAllUserFilesFromS3,
 };

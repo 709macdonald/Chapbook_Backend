@@ -1,95 +1,45 @@
-const express = require("express");
-const cors = require("cors");
-const dotenv = require("dotenv");
-const userRoutes = require("../routes/user.routes");
-const fileRoutes = require("../routes/file.routes");
-const uploadRoutes = require("../routes/upload.routes"); // ✅ renamed from multerUploadRouter
-const aiRoutes = require("../routes/ai.routes");
-const sequelize = require("./database");
+const multer = require("multer");
+const multerS3 = require("multer-s3");
+const AWS = require("aws-sdk");
 const path = require("path");
 
-dotenv.config();
-
-console.log(
-  "OPENAI_API_KEY:",
-  process.env.OPENAI_API_KEY ? "✅ Loaded" : "❌ Missing"
-);
-
-console.log("UploadThing Environment Variables:");
-console.log(
-  "UPLOADTHING_TOKEN:",
-  process.env.UPLOADTHING_TOKEN ? "Set" : "Not set"
-);
-console.log(
-  "UPLOADTHING_SECRET:",
-  process.env.UPLOADTHING_SECRET ? "Set" : "Not set"
-);
-console.log(
-  "UPLOADTHING_APP_ID:",
-  process.env.UPLOADTHING_APP_ID ? "Set" : "Not set"
-);
-
-const app = express();
-const port = 5005;
-
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "x-uploadthing-version",
-      "x-uploadthing-package",
-      "x-auth-token",
-    ],
-  })
-);
-
-app.use(express.json());
-
-app.use("/api", userRoutes);
-app.use("/api", uploadRoutes); // ✅ new modularized route
-app.use("/api", fileRoutes);
-app.use("/api/ai", aiRoutes);
-
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-console.log("🔍 Registered routes:");
-function printRoutes(stack, basePath = "") {
-  stack.forEach((r) => {
-    if (r.route) {
-      console.log(
-        `${basePath}${r.route.path} [${Object.keys(r.route.methods).join(
-          ", "
-        )}]`
-      );
-    } else if (r.name === "router" && r.handle.stack) {
-      const match = r.regexp.toString().match(/^\/\^\\\/([^\\]+)/);
-      const newBase = basePath + (match ? `/${match[1]}` : "");
-      printRoutes(r.handle.stack, newBase);
-    }
-  });
-}
-printRoutes(app._router.stack);
-
-app.get("/health", (req, res) => {
-  res.json({ status: "ok" });
+// Configure AWS S3 with environment variables
+AWS.config.update({
+  region: process.env.AWS_REGION,
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
-async function startServer() {
-  try {
-    await sequelize.sync({ alter: true }); // ✅ Safe update
-    console.log("✅ Database synced");
+const s3 = new AWS.S3();
 
-    app.listen(port, () => {
-      console.log(`🚀 Server running at http://localhost:${port}`);
-      console.log(`Upload endpoint: http://localhost:${port}/api/upload-local`);
-    });
-  } catch (error) {
-    console.error("❌ Error starting server:", error);
-    process.exit(1);
-  }
-}
+const upload = multer({
+  storage: multerS3({
+    s3,
+    bucket: process.env.S3_BUCKET_NAME,
+    acl: "private", // ensures files are not public
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    metadata: (req, file, cb) => {
+      cb(null, { fieldName: file.fieldname });
+    },
+    key: (req, file, cb) => {
+      const uniqueName = `${Date.now()}-${file.originalname}`;
+      cb(null, uniqueName);
+    },
+  }),
+  limits: {
+    fileSize: 15 * 1024 * 1024, // 15MB
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /pdf|doc|docx|txt|rtf|md|xlsx|xls|csv|jpg|jpeg|png/;
+    const extname = allowedTypes.test(
+      path.extname(file.originalname).toLowerCase()
+    );
+    if (extname) {
+      cb(null, true);
+    } else {
+      cb(new Error("❌ File type not allowed"));
+    }
+  },
+});
 
-startServer();
+module.exports = upload;
