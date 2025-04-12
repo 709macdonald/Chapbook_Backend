@@ -2,32 +2,26 @@ const User = require("../models/user");
 const { generateToken, verifyToken } = require("../utils/auth.utils");
 const bcrypt = require("bcrypt");
 
-// EDIT USER TABLE
 const createUser = async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
 
-    // Validate required fields
     if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Validate email format
     const emailRegex = /\S+@\S+\.\S+/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({ error: "Invalid email format" });
     }
 
-    // Check if the email is already in use
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ error: "Email is already in use" });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new user
     const newUser = await User.create({
       firstName,
       lastName,
@@ -35,7 +29,6 @@ const createUser = async (req, res) => {
       password: hashedPassword,
     });
 
-    // Return the response
     return res.status(201).json({
       message: "User created successfully",
       user: {
@@ -54,7 +47,7 @@ const createUser = async (req, res) => {
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.findAll({
-      attributes: ["userId", "firstName", "lastName", "email", "createdAt"], // Exclude password for security
+      attributes: ["userId", "firstName", "lastName", "email", "createdAt"],
     });
     return res.status(200).json(users);
   } catch (error) {
@@ -91,13 +84,12 @@ const updateUser = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Update user details
     if (firstName) user.firstName = firstName;
     if (lastName) user.lastName = lastName;
     if (email) user.email = email;
-    if (password) user.password = password; // No hashing now
+    if (password) user.password = password;
 
-    await user.save(); // Saves the changes
+    await user.save();
 
     return res.status(200).json({
       message: "User updated successfully",
@@ -132,7 +124,6 @@ const deleteUser = async (req, res) => {
   }
 };
 
-// LOGIN USERS
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -169,7 +160,7 @@ const getProfile = async (req, res) => {
       return res.status(401).json({ error: "No token provided" });
     }
 
-    const decoded = verifyToken(token); // Verify the token
+    const decoded = verifyToken(token);
 
     if (!decoded) {
       return res.status(401).json({ error: "Invalid or expired token" });

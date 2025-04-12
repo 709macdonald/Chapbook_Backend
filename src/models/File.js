@@ -1,7 +1,7 @@
 // models/File.js
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
-const User = require("./User"); // 👈 import User model
+const User = require("./User");
 
 const File = sequelize.define("File", {
   id: {
@@ -14,7 +14,7 @@ const File = sequelize.define("File", {
     allowNull: false,
   },
   fileContent: {
-    type: DataTypes.TEXT("long"), // 👈 ADD THIS
+    type: DataTypes.TEXT("long"),
     allowNull: true,
   },
   fileUrl: {
@@ -69,7 +69,6 @@ const File = sequelize.define("File", {
   },
 });
 
-// 👇 Association: One User has many Files, File belongs to a User
 User.hasMany(File, { foreignKey: "UserId", onDelete: "CASCADE" });
 File.belongsTo(User, { foreignKey: "UserId" });
 

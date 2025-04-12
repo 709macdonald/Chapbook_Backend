@@ -1,15 +1,11 @@
 const AWS = require("aws-sdk");
 
-// Initialize S3 client for signed URLs
 const s3 = new AWS.S3({
   region: process.env.AWS_REGION,
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
-/**
- * Handle file uploads to S3
- */
 const uploadFiles = (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
@@ -18,16 +14,15 @@ const uploadFiles = (req, res) => {
     }
 
     const uploadedFiles = req.files.map((file) => {
-      // Ensure the file has a location property (S3 URL)
       if (!file.location) {
         console.error("Missing S3 file location:", file);
         throw new Error("S3 upload configuration error");
       }
 
       return {
-        fileUrl: file.location, // S3 URL from multer-s3 v2
+        fileUrl: file.location,
         name: file.originalname,
-        key: file.key, // S3 object key for future access/deletion
+        key: file.key,
         size: file.size,
         uploadedAt: new Date().toISOString(),
       };
@@ -43,12 +38,8 @@ const uploadFiles = (req, res) => {
   }
 };
 
-/**
- * Delete a file from S3
- * Maintains the original function name to avoid changing the API
- */
 const deleteFile = async (req, res) => {
-  const key = req.params.filename; // Use filename to maintain compatibility with original code
+  const key = req.params.filename;
 
   if (!key) {
     return res.status(400).json({ error: "Missing file key" });
@@ -71,9 +62,6 @@ const deleteFile = async (req, res) => {
   }
 };
 
-/**
- * Generate a signed URL for S3 files
- */
 const getSignedUrl = (req, res) => {
   const { key } = req.params;
 
@@ -84,7 +72,7 @@ const getSignedUrl = (req, res) => {
   const params = {
     Bucket: process.env.S3_BUCKET_NAME,
     Key: key,
-    Expires: 60 * 5, // URL valid for 5 minutes
+    Expires: 60 * 5,
     ResponseContentDisposition: "inline",
   };
 
@@ -97,9 +85,6 @@ const getSignedUrl = (req, res) => {
   }
 };
 
-/**
- * Delete multiple files from S3
- */
 const deleteAllUserFilesFromS3 = async (req, res) => {
   const { files } = req.body;
 
@@ -133,7 +118,7 @@ const deleteAllUserFilesFromS3 = async (req, res) => {
 
 module.exports = {
   uploadFiles,
-  deleteFile, // Using original function name
+  deleteFile,
   getSignedUrl,
   deleteAllUserFilesFromS3,
 };

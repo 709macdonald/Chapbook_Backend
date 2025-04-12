@@ -1,4 +1,3 @@
-// src/middleware/auth.middleware.js
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 
@@ -6,7 +5,6 @@ dotenv.config();
 
 const authMiddleware = (req, res, next) => {
   try {
-    // Get token from header
     const token =
       req.headers.authorization?.split(" ")[1] || req.headers["x-auth-token"];
 
@@ -16,13 +14,10 @@ const authMiddleware = (req, res, next) => {
         .json({ message: "No token, authorization denied" });
     }
 
-    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Set user ID in request
     req.userId = decoded.userId;
 
-    // Continue to the next middleware or route handler
     next();
   } catch (error) {
     console.error("Auth middleware error:", error);

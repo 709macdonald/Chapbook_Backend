@@ -2,14 +2,12 @@ const File = require("../models/File");
 const jwt = require("jsonwebtoken");
 const AWS = require("aws-sdk");
 
-// Initialize S3 client
 const s3 = new AWS.S3({
   region: process.env.AWS_REGION,
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
-// Create a new file entry
 const createFile = async (req, res) => {
   try {
     const {
@@ -23,11 +21,11 @@ const createFile = async (req, res) => {
       locations,
       tags,
       UserId,
-      fileContent, // 👈 Add this if it's not listed
+      fileContent,
     } = req.body;
 
     console.log("📄 Saving new file:", name);
-    console.log("🧠 fileContent received:", fileContent); // 👈 Add this log
+    console.log("🧠 fileContent received:", fileContent);
 
     if (!UserId) {
       return res.status(400).json({ error: "UserId is required" });
@@ -44,7 +42,7 @@ const createFile = async (req, res) => {
       serverKey,
       type,
       date,
-      fileContent, // 👈 Add this to the DB save too!
+      fileContent,
       text,
       matchedWords,
       locations:
@@ -60,31 +58,25 @@ const createFile = async (req, res) => {
   }
 };
 
-// Get all users files
 const getAllFiles = async (req, res) => {
   console.log("✅ getAllFiles triggered");
   try {
-    // Get the userId from the auth middleware
     const userId = req.userId;
 
-    // Filter files by user ID
     const files = await File.findAll({
       where: { UserId: userId },
       order: [["date", "DESC"]],
     });
 
-    // Process files to generate fresh signed URLs
     const processedFiles = await Promise.all(
       files.map(async (file) => {
         const fileData = file.toJSON();
 
-        // Only regenerate URLs for files with a serverKey (S3 files)
         if (fileData.serverKey) {
-          // Generate fresh signed URL
           const params = {
             Bucket: process.env.S3_BUCKET_NAME,
             Key: fileData.serverKey,
-            Expires: 60 * 60, // Increase to 1 hour
+            Expires: 60 * 60,
             ResponseContentDisposition: "inline",
           };
 
@@ -97,7 +89,6 @@ const getAllFiles = async (req, res) => {
               `❌ Error generating signed URL for ${fileData.name}:`,
               err
             );
-            // Keep the existing URL
           }
         }
 
@@ -112,7 +103,6 @@ const getAllFiles = async (req, res) => {
   }
 };
 
-// Get file by ID
 const getFileById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -121,7 +111,7 @@ const getFileById = async (req, res) => {
     const file = await File.findOne({
       where: {
         id: id,
-        UserId: userId, // Only get the file if it belongs to this user
+        UserId: userId,
       },
     });
 
@@ -136,7 +126,6 @@ const getFileById = async (req, res) => {
   }
 };
 
-// Update file
 const updateFile = async (req, res) => {
   try {
     const { id } = req.params;
@@ -146,7 +135,7 @@ const updateFile = async (req, res) => {
     const file = await File.findOne({
       where: {
         id: id,
-        UserId: userId, // Only update files that belong to this user
+        UserId: userId,
       },
     });
 
@@ -163,7 +152,6 @@ const updateFile = async (req, res) => {
   }
 };
 
-// Delete file
 const deleteFile = async (req, res) => {
   try {
     const { id } = req.params;
@@ -172,7 +160,7 @@ const deleteFile = async (req, res) => {
     const file = await File.findOne({
       where: {
         id: id,
-        UserId: userId, // Only delete files that belong to this user
+        UserId: userId,
       },
     });
 
@@ -180,7 +168,6 @@ const deleteFile = async (req, res) => {
       return res.status(404).json({ error: "File not found" });
     }
 
-    // Delete from S3 if using S3 storage and we have a serverKey
     if (process.env.USE_S3 === "true" && file.serverKey) {
       try {
         const params = {
@@ -192,7 +179,6 @@ const deleteFile = async (req, res) => {
         console.log(`✅ Deleted file from S3: ${file.serverKey}`);
       } catch (s3Error) {
         console.error("❌ Error deleting from S3:", s3Error);
-        // Continue with DB deletion even if S3 deletion fails
       }
     }
 
@@ -205,18 +191,15 @@ const deleteFile = async (req, res) => {
   }
 };
 
-// Delete all files for the current user
 const deleteAllFiles = async (req, res) => {
   try {
     const userId = req.userId;
 
-    // If using S3, get all files to delete them from S3 first
     if (process.env.USE_S3 === "true") {
       const files = await File.findAll({
         where: { UserId: userId },
       });
 
-      // Delete each file from S3
       for (const file of files) {
         if (file.serverKey) {
           try {
@@ -232,13 +215,11 @@ const deleteAllFiles = async (req, res) => {
               `❌ Error deleting file from S3: ${file.serverKey}`,
               s3Error
             );
-            // Continue with next file even if this one fails
           }
         }
       }
     }
 
-    // Only delete files for the current user
     await File.destroy({
       where: { UserId: userId },
     });
@@ -264,13 +245,11 @@ const resetUserFiles = async (req, res) => {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
-    // If using S3, get all files to delete them from S3 first
     if (process.env.USE_S3 === "true") {
       const files = await File.findAll({
         where: { UserId: userId },
       });
 
-      // Delete each file from S3
       for (const file of files) {
         if (file.serverKey) {
           try {
@@ -286,7 +265,6 @@ const resetUserFiles = async (req, res) => {
               `❌ Error deleting file from S3: ${file.serverKey}`,
               s3Error
             );
-            // Continue with next file even if this one fails
           }
         }
       }

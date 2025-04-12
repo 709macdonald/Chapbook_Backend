@@ -3,7 +3,6 @@ const multerS3 = require("multer-s3");
 const AWS = require("aws-sdk");
 const path = require("path");
 
-// Configure AWS S3 with AWS SDK v2
 AWS.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -12,7 +11,6 @@ AWS.config.update({
 
 const s3 = new AWS.S3();
 
-// Verify S3 credentials
 console.log("🔍 Verifying S3 credentials...");
 s3.listBuckets((err, data) => {
   if (err) {
@@ -23,7 +21,6 @@ s3.listBuckets((err, data) => {
   }
 });
 
-// Configure multer-s3 with AWS SDK v2
 const upload = multer({
   storage: multerS3({
     s3: s3,
@@ -39,10 +36,9 @@ const upload = multer({
     },
   }),
   limits: {
-    fileSize: 15 * 1024 * 1024, // 15MB limit
+    fileSize: 15 * 1024 * 1024, // 15MB
   },
   fileFilter: (req, file, cb) => {
-    // Optional: Add file type restrictions if needed
     const allowedFileTypes =
       /pdf|doc|docx|txt|rtf|md|xlsx|xls|csv|jpg|jpeg|png/;
     const extname = allowedFileTypes.test(

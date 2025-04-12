@@ -31,15 +31,13 @@ async function testConnection() {
 
 async function syncDatabase() {
   try {
-    // Sync all defined models to the database
-    await sequelize.sync({ force: false }); // 'force: true' will drop the table each time
+    await sequelize.sync({ force: false });
     console.log("Database sync successful.");
   } catch (error) {
     console.error("Unable to sync the database:", error);
   }
 }
 
-// Only run these in non-test environments
 if (process.env.NODE_ENV !== "test") {
   testConnection();
   syncDatabase();

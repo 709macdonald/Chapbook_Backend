@@ -1,4 +1,3 @@
-// config/openai.config.js
 const { OpenAI } = require("openai");
 
 const openai = new OpenAI({

@@ -1,4 +1,3 @@
-// controllers/ai.controller.js
 const openai = require("../config/openai.config");
 
 const generateResponse = async (req, res) => {

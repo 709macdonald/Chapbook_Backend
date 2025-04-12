@@ -3,7 +3,6 @@ const router = express.Router();
 const fileController = require("../controllers/file.controller");
 const authMiddleware = require("../middleware/auth.middleware");
 
-// FILE CRUD ROUTES
 router.post("/files", authMiddleware, fileController.createFile);
 router.get("/files", authMiddleware, fileController.getAllFiles);
 router.get("/files/:id", authMiddleware, fileController.getFileById);

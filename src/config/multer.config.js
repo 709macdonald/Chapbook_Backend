@@ -3,7 +3,6 @@ const multerS3 = require("multer-s3");
 const AWS = require("aws-sdk");
 const path = require("path");
 
-// Configure AWS S3 with environment variables
 AWS.config.update({
   region: process.env.AWS_REGION,
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -16,7 +15,7 @@ const upload = multer({
   storage: multerS3({
     s3,
     bucket: process.env.S3_BUCKET_NAME,
-    acl: "private", // ensures files are not public
+    acl: "private",
     contentType: multerS3.AUTO_CONTENT_TYPE,
     metadata: (req, file, cb) => {
       cb(null, { fieldName: file.fieldname });
