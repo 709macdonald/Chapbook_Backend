@@ -6,12 +6,14 @@ describe("uploadFiles controller", () => {
       files: [
         {
           originalname: "file1.txt",
-          filename: "file1-12345.txt",
+          location: "https://s3.amazonaws.com/bucket/file1-12345.txt",
+          key: "file1-12345.txt",
           size: 1024,
         },
         {
           originalname: "file2.jpg",
-          filename: "file2-67890.jpg",
+          location: "https://s3.amazonaws.com/bucket/file2-67890.jpg",
+          key: "file2-67890.jpg",
           size: 2048,
         },
       ],
@@ -25,14 +27,14 @@ describe("uploadFiles controller", () => {
 
     expect(res.json).toHaveBeenCalledWith([
       {
-        fileUrl: "http://localhost:5005/uploads/file1-12345.txt",
+        fileUrl: "https://s3.amazonaws.com/bucket/file1-12345.txt",
         name: "file1.txt",
         key: "file1-12345.txt",
         size: 1024,
         uploadedAt: expect.any(String),
       },
       {
-        fileUrl: "http://localhost:5005/uploads/file2-67890.jpg",
+        fileUrl: "https://s3.amazonaws.com/bucket/file2-67890.jpg",
         name: "file2.jpg",
         key: "file2-67890.jpg",
         size: 2048,
@@ -41,7 +43,7 @@ describe("uploadFiles controller", () => {
     ]);
   });
 
-  it("should return an error with status 500 if file upload fails", () => {
+  it("should return an error with status 400 if no files are provided", () => {
     const req = {
       files: [],
     };
@@ -53,7 +55,32 @@ describe("uploadFiles controller", () => {
 
     uploadController.uploadFiles(req, res);
 
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: "No files uploaded." });
+  });
+
+  it("should return an error with status 500 if file is missing location", () => {
+    const req = {
+      files: [
+        {
+          originalname: "badfile.txt",
+          key: "badfile.txt",
+          size: 1234,
+          // ❌ missing 'location'
+        },
+      ],
+    };
+
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+
+    uploadController.uploadFiles(req, res);
+
     expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith({ error: "File upload failed" });
+    expect(res.json).toHaveBeenCalledWith({
+      error: expect.stringContaining("File upload to S3 failed"),
+    });
   });
 });
