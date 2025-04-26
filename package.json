@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "test": "jest --detectOpenHandles --runInBand",
-    "server": "nodemon server.js"
+    "server": "nodemon server.js",
+    "start": "node src/server.js"
   },
   "keywords": [],
   "author": "",
