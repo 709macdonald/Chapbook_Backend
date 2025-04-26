@@ -1,7 +1,7 @@
 // models/File.js
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
-const User = require("./User");
+const User = require("./user");
 
 const File = sequelize.define("File", {
   id: {
