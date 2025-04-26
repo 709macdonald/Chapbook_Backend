@@ -7,10 +7,14 @@ const sequelize = new Sequelize(
   process.env.PASSWORD || "YES",
   {
     host: process.env.HOST || "localhost",
+    port: process.env.DB_PORT || 3306,
     dialect: "mysql",
     dialectOptions: {
       charset: "utf8mb4",
       collate: "utf8mb4_unicode_ci",
+      ssl: {
+        require: true,
+      },
     },
     define: {
       charset: "utf8mb4",
