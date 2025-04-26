@@ -19,7 +19,7 @@ const requiredS3Vars = [
 ];
 
 const app = express();
-const port = 5005;
+const port = process.env.PORT || 5005;
 
 app.use(
   cors({
