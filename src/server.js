@@ -23,14 +23,17 @@ const port = process.env.PORT || 5005;
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://chapbook-react-app-rb24-bzzolm0lw-peter-macdonalds-projects.vercel.app",
+  "https://chapbook-react-app-rb24.vercel.app",
 ];
 
 const corsOptions = {
-  origin: [
-    "http://localhost:5173",
-    "https://chapbook-react-app-rb24-bzzolm0lw-peter-macdonalds-projects.vercel.app",
-  ],
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: [
@@ -42,7 +45,8 @@ const corsOptions = {
   ],
 };
 
-app.use(cors(corsOptions));
+app.use(cors(corsOptions)); // ✅ Only once
+app.options("*", cors(corsOptions)); // ✅ Handle preflight OPTIONS
 
 app.use(express.json());
 
@@ -59,7 +63,6 @@ async function startServer() {
   try {
     await sequelize.sync({ alter: true });
     console.log("✅ Database synced");
-
     app.listen(port, () => {
       console.log(`🚀 Server running at http://localhost:${port}`);
       console.log(`S3 Upload endpoint: http://localhost:${port}/api/upload`);
