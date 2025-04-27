@@ -26,26 +26,23 @@ const allowedOrigins = [
   "https://chapbook-react-app-rb24-bzzolm0lw-peter-macdonalds-projects.vercel.app",
 ];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "x-uploadthing-version",
-      "x-uploadthing-package",
-      "x-auth-token",
-    ],
-    credentials: true, // Important if you're sending Authorization headers
-  })
-);
+const corsOptions = {
+  origin: [
+    "http://localhost:5173",
+    "https://chapbook-react-app-rb24-bzzolm0lw-peter-macdonalds-projects.vercel.app",
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "x-uploadthing-version",
+    "x-uploadthing-package",
+    "x-auth-token",
+  ],
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
