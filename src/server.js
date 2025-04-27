@@ -21,9 +21,20 @@ const requiredS3Vars = [
 const app = express();
 const port = process.env.PORT || 5005;
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://chapbook-react-app-rb24-bzzolm0lw-peter-macdonalds-projects.vercel.app",
+];
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: [
       "Content-Type",
@@ -32,6 +43,7 @@ app.use(
       "x-uploadthing-package",
       "x-auth-token",
     ],
+    credentials: true, // Important if you're sending Authorization headers
   })
 );
 

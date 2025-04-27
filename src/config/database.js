@@ -14,7 +14,7 @@ const sequelize = new Sequelize(
       collate: "utf8mb4_unicode_ci",
       ssl: {
         require: true,
-        rejectUnauthorized: false, // Crucial for Railway MySQL connections
+        rejectUnauthorized: false,
       },
     },
     define: {
