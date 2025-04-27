@@ -29,7 +29,7 @@ const allowedOrigins = [
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
+      callback(null, origin); // 🎯 send back the correct origin
     } else {
       callback(new Error("Not allowed by CORS"));
     }
@@ -45,8 +45,8 @@ const corsOptions = {
   ],
 };
 
-app.use(cors(corsOptions)); // ✅ Only once
-app.options("*", cors(corsOptions)); // ✅ Handle preflight OPTIONS
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // preflight
 
 app.use(express.json());
 
