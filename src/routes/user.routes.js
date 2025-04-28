@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/user.controller");
 const authMiddleware = require("../middleware/auth.middleware");
-const { User } = require("../models"); // 👈 Needed for the /me route
+const User = require("../models/user");
 
 router.post("/users", userController.createUser);
 router.post("/login", userController.loginUser);
