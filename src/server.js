@@ -10,6 +10,7 @@ const fileRoutes = require("./routes/file.routes");
 const uploadRoutes = require("./routes/upload.routes");
 const aiRoutes = require("./routes/ai.routes");
 const sequelize = require("./config/database");
+const googleLoginRoutes = require("./routes/googleLogin.routes");
 
 const requiredS3Vars = [
   "AWS_REGION",
@@ -54,6 +55,7 @@ app.use("/api", userRoutes);
 app.use("/api", uploadRoutes);
 app.use("/api", fileRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api", googleLoginRoutes);
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
