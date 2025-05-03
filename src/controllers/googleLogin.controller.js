@@ -1,6 +1,6 @@
 const { OAuth2Client } = require("google-auth-library");
 const jwt = require("jsonwebtoken");
-const User = require("../models/user"); // update path as needed
+const User = require("../models/user");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -22,15 +22,15 @@ const handleGoogleLogin = async (req, res) => {
         firstName: given_name,
         lastName: family_name,
         email,
-        password: sub, // could hash if you want
+        password: sub, // can be hashed later
       });
     }
 
-    const jwtToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+    const jwtToken = jwt.sign({ userId: user.userId }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
 
-    res.json({ token: jwtToken, userId: user.id });
+    res.json({ token: jwtToken }); // ✅ Only send one response
   } catch (error) {
     console.error("Google Login Error:", error);
     res.status(401).json({ error: "Google token invalid" });
