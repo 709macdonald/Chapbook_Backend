@@ -25,6 +25,8 @@ const port = process.env.PORT || 5005;
 const allowedOrigins = [
   "http://localhost:5173",
   "https://chapbook-react-app-rb24.vercel.app",
+  "https://chapbook-react-app.vercel.app",
+  "https://chapbook-react-app-git-main-peter-macdonalds-projects.vercel.app",
 ];
 
 const corsOptions = {
