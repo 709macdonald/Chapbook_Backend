@@ -1,6 +1,28 @@
 const User = require("../models/user");
 const { generateToken, verifyToken } = require("../utils/auth.utils");
 const bcrypt = require("bcrypt");
+const { v4: uuidv4 } = require("uuid");
+
+const guestLogin = async (req, res) => {
+  try {
+    const email = `${uuidv4()}@guest.chapbook.app`;
+
+    const newUser = await User.create({
+      firstName: "Guest",
+      lastName: "User",
+      email,
+      password: "guest", // can be random, hashed if needed
+      isGuest: true, // 👈 Add this column to your User model if you haven’t
+    });
+
+    const token = generateToken(newUser.userId);
+
+    return res.status(201).json({ token });
+  } catch (error) {
+    console.error("❌ Guest login error:", error);
+    return res.status(500).json({ error: "Guest login failed" });
+  }
+};
 
 const createUser = async (req, res) => {
   try {
@@ -189,4 +211,5 @@ module.exports = {
   deleteUser,
   loginUser,
   getProfile,
+  guestLogin,
 };

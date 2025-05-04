@@ -6,6 +6,7 @@ const User = require("../models/user");
 
 router.post("/users", userController.createUser);
 router.post("/login", userController.loginUser);
+router.post("/guest-login", userController.guestLogin);
 
 router.get("/users", authMiddleware, userController.getAllUsers);
 router.get("/users/:id", authMiddleware, userController.getUserById);

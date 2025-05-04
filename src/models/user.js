@@ -1,6 +1,5 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
-const { v4: uuidv4 } = require("uuid");
 
 const User = sequelize.define("User", {
   userId: {
@@ -25,6 +24,11 @@ const User = sequelize.define("User", {
   password: {
     type: DataTypes.STRING,
     allowNull: false,
+  },
+  // 👇 ADD THIS
+  isGuest: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
   },
 });
 
