@@ -13,6 +13,55 @@ const uploadFiles = (req, res) => {
       return res.status(400).json({ error: "No files uploaded." });
     }
 
+    // === 🔐 Backend File Upload Validation ===
+    const MAX_FILES = 20;
+    const MAX_FILE_SIZE_MB = 100;
+    const MAX_TOTAL_SIZE_MB = 100;
+    const allowedExtensions = [
+      "pdf",
+      "jpg",
+      "jpeg",
+      "png",
+      "webp",
+      "doc",
+      "docx",
+    ];
+
+    if (req.files.length > MAX_FILES) {
+      return res
+        .status(400)
+        .json({ error: `Too many files. Maximum allowed is ${MAX_FILES}.` });
+    }
+
+    const invalidFiles = req.files.filter((file) => {
+      const ext = file.originalname.split(".").pop()?.toLowerCase();
+      return !allowedExtensions.includes(ext);
+    });
+
+    if (invalidFiles.length > 0) {
+      return res.status(400).json({
+        error: `Some files have unsupported types. Allowed: ${allowedExtensions.join(
+          ", "
+        )}`,
+      });
+    }
+
+    const totalSizeMB =
+      req.files.reduce((acc, file) => acc + file.size, 0) / (1024 * 1024);
+    if (totalSizeMB > MAX_TOTAL_SIZE_MB) {
+      return res.status(400).json({
+        error: `Total upload size exceeds ${MAX_TOTAL_SIZE_MB}MB.`,
+      });
+    }
+
+    for (const file of req.files) {
+      if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+        return res.status(400).json({
+          error: `${file.originalname} exceeds the ${MAX_FILE_SIZE_MB}MB file size limit.`,
+        });
+      }
+    }
+
     const uploadedFiles = req.files.map((file) => {
       if (!file.location) {
         console.error("Missing S3 file location:", file);
