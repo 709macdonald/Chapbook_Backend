@@ -17,15 +17,7 @@ const uploadFiles = (req, res) => {
     const MAX_FILES = 20;
     const MAX_FILE_SIZE_MB = 100;
     const MAX_TOTAL_SIZE_MB = 100;
-    const allowedExtensions = [
-      "pdf",
-      "jpg",
-      "jpeg",
-      "png",
-      "webp",
-      "doc",
-      "docx",
-    ];
+    const allowedExtensions = ["pdf", "jpg", "jpeg", "png", "doc", "docx"];
 
     if (req.files.length > MAX_FILES) {
       return res
